@@ -1,0 +1,51 @@
+minikube start --driver=docker
+
+minikube dashboard
+
+kubectl get nodes
+
+kubectl create deployment miwev --image=nginx
+
+kubectl get pods
+
+kubectl get deployments
+
+kubectl scale deployment miwev --replicas=3
+
+kubectl expose deployment miwev --type=NodePort --port=80
+
+minikube service miwev --url
+
+kubectl delete pod miwev-69f785cf66-7glbc
+
+kubectl logs miwev-69f785cf66-vdzbc
+
+kubectl delete deployment web2
+
+--------balacneo de carga --------
+
+kubectl create deployment web2 --image=paulbouwer/hello-kubernetes:1.10
+
+kubectl scale deployment web2 --replicas=3
+
+kubectl get pods
+
+kubectl get deployments
+
+kubectl expose deployment web2 --type=NodePort --port=8080
+
+minikube service web2 --url
+
+kubectl rollout status deployment/web2
+
+kubectl get pods -w
+
+kubectl set image deployment/web2 hello-kubernetes=paulbouwer/hello-kubernetes:1.5
+
+kubectl get pods --show-labels
+
+kubectl describe pod web2-79c5b8c6bc-zmdrw 
+
+
+
+
