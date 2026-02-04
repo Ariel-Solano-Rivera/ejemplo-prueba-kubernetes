@@ -1,0 +1,39 @@
+# Comandos (PowerShell) para desplegar el sistema MongoDB + Productor + Mongo Express
+
+# 0) (Opcional) limpiar si ya existe
+kubectl delete ns monitoreo
+
+# 1) Crear namespace
+kubectl apply -f k8s\manifests\00-namespace.yml
+
+# 2) Crear secretos (usuario/clave MongoDB)
+kubectl apply -f k8s\manifests\01-secreto-mongodb.yml
+
+# 3) Desplegar MongoDB con persistencia + Service
+kubectl apply -f k8s\manifests\02-mongodb-persistente.yml
+
+# 4) Desplegar Productor (sensor simulado)
+kubectl apply -f k8s\manifests\03-productor.yml
+
+# 5) Desplegar Cliente Web (Mongo Express) + NodePort
+kubectl apply -f k8s\manifests\04-cliente-web.yml
+
+# 6) Ver estado
+kubectl get pods -n monitoreo
+kubectl get pvc -n monitoreo
+kubectl get svc -n monitoreo
+
+# 7) Ver logs del productor
+kubectl logs -n monitoreo deploy/productor-sensor -f
+
+# 8) Abrir la UI (Mongo Express)
+# En Minikube con driver Docker en Windows, usa:
+minikube service -n monitoreo servicio-cliente-web --url
+
+# 9) Prueba de resiliencia:
+# - borra el Pod de MongoDB y espera que se recree
+kubectl delete pod -n monitoreo -l app=mongodb
+kubectl get pods -n monitoreo -w
+
+# 10) Evidencia de PVC Bound:
+kubectl get pvc -n monitoreo

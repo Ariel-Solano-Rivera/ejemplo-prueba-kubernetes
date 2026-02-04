@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cliente-web
+  namespace: monitoreo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cliente-web
+  template:
+    metadata:
+      labels:
+        app: cliente-web
+    spec:
+      containers:
+        - name: mongo-express
+          image: mongo-express:1.0.2-20-alpine3.19
+          ports:
+            - containerPort: 8081
+          env:
+            - name: ME_CONFIG_MONGODB_SERVER
+              value: "servicio-mongodb"
+            - name: ME_CONFIG_MONGODB_PORT
+              value: "27017"
+            - name: ME_CONFIG_MONGODB_ADMINUSERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: secreto-mongodb
+                  key: MONGO_INITDB_ROOT_USERNAME
+            - name: ME_CONFIG_MONGODB_ADMINPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: secreto-mongodb
+                  key: MONGO_INITDB_ROOT_PASSWORD
+            - name: ME_CONFIG_BASICAUTH
+              value: "false"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: servicio-cliente-web
+  namespace: monitoreo
+spec:
+  type: NodePort
+  selector:
+    app: cliente-web
+  ports:
+    - port: 8081
+      targetPort: 8081
+      nodePort: 30082

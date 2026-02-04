@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productor-sensor
+  namespace: monitoreo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: productor
+  template:
+    metadata:
+      labels:
+        app: productor
+    spec:
+      containers:
+        - name: productor
+          image: python:3.12-alpine
+          env:
+            - name: ID_SENSOR
+              value: "rbt-01"
+            - name: HOST_MONGO
+              value: "servicio-mongodb"
+            - name: PUERTO_MONGO
+              value: "27017"
+            - name: USUARIO_MONGO
+              valueFrom:
+                secretKeyRef:
+                  name: secreto-mongodb
+                  key: MONGO_INITDB_ROOT_USERNAME
+            - name: CLAVE_MONGO
+              valueFrom:
+                secretKeyRef:
+                  name: secreto-mongodb
+                  key: MONGO_INITDB_ROOT_PASSWORD
+            - name: NOMBRE_BD
+              value: "monitoreo"
+            - name: NOMBRE_COLECCION
+              value: "lecturas"
+          command: ["sh", "-c"]
+          args:
+            - |
+              pip install --no-cache-dir pymongo >/dev/null 2>&1
+              python - <<'PY'
+              import os, random, time
+              from datetime import datetime, timezone
+              from pymongo import MongoClient
+
+              sensor_id = os.getenv("ID_SENSOR","rbt-01")
+              host = os.getenv("HOST_MONGO","servicio-mongodb")
+              port = int(os.getenv("PUERTO_MONGO","27017"))
+              user = os.getenv("USUARIO_MONGO")
+              pwd  = os.getenv("CLAVE_MONGO")
+              dbn  = os.getenv("NOMBRE_BD","monitoreo")
+              coln = os.getenv("NOMBRE_COLECCION","lecturas")
+
+              uri = f"mongodb://{user}:{pwd}@{host}:{port}/admin"
+              client = MongoClient(uri, serverSelectionTimeoutMS=5000)
+              col = client[dbn][coln]
+
+              print("Productor iniciado (MongoDB). Insertando cada 3s...", flush=True)
+
+              while True:
+                  doc = {
+                      "sensor_id": sensor_id,
+                      "valor": random.randint(0, 99),
+                      "timestamp": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+                  }
+                  col.insert_one(doc)
+                  print("Insertado:", doc, flush=True)
+                  time.sleep(3)
+              PY
