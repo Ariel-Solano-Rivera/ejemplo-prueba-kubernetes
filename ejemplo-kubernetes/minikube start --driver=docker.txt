@@ -1,0 +1,27 @@
+minikube start --driver=Docker
+kubectl get nodes
+
+kubectl create deployment nginx-demo --image=nginxdemos/hello:latest
+kubectl get deployments
+kubectl get pods
+
+kubectl expose deployment nginx-demo --port=80 --target-port=80 --type=ClusterIP
+kubectl get services
+
+kubectl port-forward service/nginx-demo 8080:80
+Abre: http://localhost:8080
+
+kubectl edit service nginx-demo
+cambia a type: NodePort
+kubectl get services
+
+minikube service nginx-demo
+
+kubectl scale deployment nginx-demo --replicas=4
+kubectl get pods
+
+kubectl get deployment nginx-demo -o jsonpath="{.spec.template.spec.containers[*].name}"
+kubectl set image deployment/nginx-demo hello=nginx:alpine
+kubectl rollout status deployment nginx-demo
+
+minikube service nginx-demo
